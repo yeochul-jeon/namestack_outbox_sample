@@ -1,0 +1,37 @@
+server:
+  port: 8080
+  shutdown: graceful
+  compression:
+    min-response-size: 1
+    enabled: true
+  error:
+    whitelabel:
+      enabled: false
+
+spring:
+  application:
+    name: confluence
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  profiles:
+    active: local
+  main:
+    web-application-type: servlet
+    banner-mode: off
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v2/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+
+confluence:
+  auth:
+    api-token: OTQzMTYzNjA4ODkwOs2ouGJ0LtlNao/ls6ukzGgzclNS
+    email: yeochul.jeon@cj.net
+  base-url: https://cjics.cj.net/confluence/
+  space-key: ENMcommercesystem

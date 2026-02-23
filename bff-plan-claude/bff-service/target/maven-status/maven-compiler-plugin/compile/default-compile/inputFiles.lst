@@ -1,0 +1,16 @@
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/BffApplication.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/config/RouteConfiguration.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/config/RouteProperties.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/config/WebClientConfiguration.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/dto/DashboardResponse.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/dto/LoginRequest.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/dto/LoginResponse.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/dto/Order.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/dto/Payment.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/dto/User.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/filter/JwtAuthenticationFilter.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/filter/RateLimitingFilter.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/handler/AuthHandler.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/handler/CompositionHandler.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/handler/ProxyHandler.java
+/Users/cjenm/project/bff-plan-claude/bff-service/src/main/java/com/example/bff/service/JwtTokenProvider.java

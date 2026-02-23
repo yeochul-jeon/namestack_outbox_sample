@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # Redis (Rate Limiting & Token Storage)
+  redis:
+    image: redis:7-alpine
+    container_name: bff-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - bff-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # BFF Service
+  bff-service:
+    build:
+      context: ./bff-service
+      dockerfile: Dockerfile
+    container_name: bff-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SERVICES_USER_SERVICE=http://user-service:8081
+      - SERVICES_ORDER_SERVICE=http://order-service:8082
+      - SERVICES_PAYMENT_SERVICE=http://payment-service:8083
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+    networks:
+      - bff-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mock User Service
+  user-service:
+    image: python:3.11-slim
+    container_name: mock-user-service
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./mock-services/user-service.py:/app/user-service.py
+    working_dir: /app
+    command: >
+      sh -c "pip install Flask==3.0.0 Werkzeug==3.0.1 -q && python user-service.py"
+    networks:
+      - bff-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mock Order Service
+  order-service:
+    image: python:3.11-slim
+    container_name: mock-order-service
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./mock-services/order-service.py:/app/order-service.py
+    working_dir: /app
+    command: >
+      sh -c "pip install Flask==3.0.0 Werkzeug==3.0.1 -q && python order-service.py"
+    networks:
+      - bff-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mock Payment Service
+  payment-service:
+    image: python:3.11-slim
+    container_name: mock-payment-service
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./mock-services/payment-service.py:/app/payment-service.py
+    working_dir: /app
+    command: >
+      sh -c "pip install Flask==3.0.0 Werkzeug==3.0.1 -q && python payment-service.py"
+    networks:
+      - bff-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  bff-network:
+    driver: bridge

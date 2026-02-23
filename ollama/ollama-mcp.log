@@ -1,0 +1,5 @@
+Failed to start server: Error: Port 3456 is already in use
+    at Server.<anonymous> (file:///Users/cjenm/.asdf/installs/nodejs/24.8.0/lib/node_modules/@rawveg/ollama-mcp/dist/index.js:106:32)
+    at Server.emit (node:events:508:28)
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)

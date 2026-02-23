@@ -1,0 +1,187 @@
+spring:
+  application:
+    name: bff-service
+  cloud:
+    kubernetes:
+      discovery:
+        enabled: false  # Docker 환경에서 K8s 비활성화
+  webflux:
+    base-path: /
+    static-path-pattern: /static/**
+
+  # Redis 설정 (Docker Compose)
+  data:
+    redis:
+      host: redis
+      port: 6379
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+server:
+  port: 8080
+  netty:
+    connection-timeout: 10s
+
+# ============================================
+# 외부 설정을 통한 라우트 관리 (Docker)
+# ============================================
+routes:
+  # 공개 엔드포인트 (인증 불필요)
+  publicEndpoints:
+    - path: /login
+      method: POST
+      handler: authHandler
+      handlerMethod: login
+      description: 사용자 로그인
+    - path: /refresh
+      method: POST
+      handler: authHandler
+      handlerMethod: refresh
+      description: 토큰 갱신
+    - path: /logout
+      method: POST
+      handler: authHandler
+      handlerMethod: logout
+      description: 로그아웃
+
+  # 보호된 엔드포인트 (인증 필요)
+  protectedEndpoints:
+    - path: /api/dashboard/{userId}
+      method: GET
+      handler: compositionHandler
+      handlerMethod: getDashboard
+      description: 대시보드 데이터 조회
+
+  # 프록시 라우트 (마이크로서비스)
+  proxyRoutes:
+    # User Service 라우팅
+    - serviceName: user-service
+      path: /api/users/**
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      handlerMethod: proxyToUserService
+      description: 사용자 서비스 프록시
+
+    # Order Service 라우팅
+    - serviceName: order-service
+      path: /api/orders/**
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      handlerMethod: proxyToOrderService
+      description: 주문 서비스 프록시
+
+    # Payment Service 라우팅
+    - serviceName: payment-service
+      path: /api/payments/**
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      handlerMethod: proxyToPaymentService
+      description: 결제 서비스 프록시
+
+logging:
+  level:
+    root: INFO
+    com.example.bff: DEBUG
+    org.springframework: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Docker Compose에서 사용할 마이크로서비스 URL
+# 환경변수로 오버라이드 가능
+services:
+  user-service: ${SERVICES_USER_SERVICE:http://user-service:8081}
+  order-service: ${SERVICES_ORDER_SERVICE:http://order-service:8082}
+  payment-service: ${SERVICES_PAYMENT_SERVICE:http://payment-service:8083}
+
+# JWT 설정
+jwt:
+  secret: "docker-secret-key-for-testing-only-32-chars"
+  access-token:
+    validity: 3600000  # 1시간
+  refresh-token:
+    validity: 604800000  # 7일
+
+# Rate Limiting 설정 (Docker: 테스트용)
+rate-limit:
+  enabled: true
+  requests-per-second: 100
+
+# Resilience4j Circuit Breaker 설정 (Docker)
+resilience4j:
+  circuitbreaker:
+    instances:
+      user-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 3
+        permittedNumberOfCallsInHalfOpenState: 2
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000ms
+        waitDurationInOpenState: 5000ms
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      order-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 3
+        permittedNumberOfCallsInHalfOpenState: 2
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000ms
+        waitDurationInOpenState: 5000ms
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      payment-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 3
+        permittedNumberOfCallsInHalfOpenState: 2
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000ms
+        waitDurationInOpenState: 5000ms
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+  retry:
+    instances:
+      user-service:
+        maxAttempts: 2
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+      order-service:
+        maxAttempts: 2
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+      payment-service:
+        maxAttempts: 2
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2

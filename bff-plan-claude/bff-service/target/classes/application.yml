@@ -1,0 +1,143 @@
+spring:
+  application:
+    name: bff-service
+  cloud:
+    kubernetes:
+      discovery:
+        enabled: true
+        all-namespaces: true
+      client:
+        namespace: default
+  webflux:
+    base-path: /
+    static-path-pattern: /static/**
+
+  # Redis 설정 (기본: K8s redis service)
+  data:
+    redis:
+      host: redis
+      port: 6379
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+server:
+  port: 8080
+  netty:
+    connection-timeout: 10s
+
+logging:
+  level:
+    root: INFO
+    com.example.bff: DEBUG
+    org.springframework.cloud.kubernetes: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# JWT 설정
+jwt:
+  secret: "${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation123456}"
+  access-token:
+    validity: 3600000  # 1시간 (밀리초)
+  refresh-token:
+    validity: 604800000  # 7일 (밀리초)
+
+# Rate Limiting 설정
+rate-limit:
+  enabled: true
+  requests-per-second: 100
+
+# Resilience4j Circuit Breaker 설정
+resilience4j:
+  circuitbreaker:
+    instances:
+      user-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000ms
+        waitDurationInOpenState: 10000ms
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - java.io.IOException
+          - java.net.SocketException
+          - org.springframework.web.client.HttpClientErrorException
+
+      order-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000ms
+        waitDurationInOpenState: 10000ms
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      payment-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000ms
+        waitDurationInOpenState: 10000ms
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+      dashboard:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 3
+        permittedNumberOfCallsInHalfOpenState: 2
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 3000ms
+        waitDurationInOpenState: 10000ms
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+  retry:
+    instances:
+      user-service:
+        maxAttempts: 3
+        waitDuration: 1000ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketException
+          - org.springframework.web.client.HttpClientErrorException
+
+      order-service:
+        maxAttempts: 3
+        waitDuration: 1000ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+      payment-service:
+        maxAttempts: 3
+        waitDuration: 1000ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+      dashboard:
+        maxAttempts: 2
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
